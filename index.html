@@ -79,7 +79,7 @@
   <button class="btn-start" id="startBtn" onclick="mulaGame()">MULA GAME ▶️</button>
   <button class="btn-view-all" onclick="openModal()">📜 Lihat Senarai Kedudukan Carta</button>
 
-  <!-- BORANG PENDAFTARAN/TAMAT GAME -->
+  <!-- BORANG PENDAFTARAN DINAMIK -->
   <div class="form-container" id="scoreForm" style="display: none;">
     <h3 style="text-align: center; color: #facc15;">TAMAT GAME!</h3>
     <p style="text-align: center; font-size: 14px; margin-bottom: 10px;">Skor Akhir: <b id="finalScore" style="font-size: 20px; color: #f87171;">0</b></p>
@@ -90,9 +90,9 @@
     <label>No. WhatsApp:</label>
     <input type="tel" id="noTel" placeholder="0139876543" required>
     
-    <label>Daerah (Terengganu):</label>
-    <select id="daerah" required>
-      <option value="">-- Pilih Daerah --</option>
+    <label>Daerah / Negeri Asal:</label>
+    <select id="daerah" onchange="tukarDaerah()" required>
+      <option value="">-- Pilih Daerah / Luar Negeri --</option>
       <option value="Kuala Terengganu">Kuala Terengganu</option>
       <option value="Kuala Nerus">Kuala Nerus</option>
       <option value="Marang">Marang</option>
@@ -101,8 +101,14 @@
       <option value="Kemaman">Kemaman</option>
       <option value="Besut">Besut</option>
       <option value="Setiu">Setiu</option>
-      <option value="Luar Terengganu">Luar Terengganu</option>
+      <option value="Luar Terengganu">Luar Terengganu (Taip Negeri/Daerah)</option>
     </select>
+
+    <!-- INPUT NEGERI/DAERAH LUAR -->
+    <div id="boxLuarTerengganu" style="display: none;">
+      <label>Nyatakan Negeri / Daerah Anda:</label>
+      <input type="text" id="daerahLuar" placeholder="Contoh: Kuantan, Pahang / Kota Bharu, Kelantan">
+    </div>
 
     <label>Kategori:</label>
     <select id="kategori" onchange="tukarKategori()">
@@ -110,7 +116,7 @@
       <option value="Warga KKM">Warga KKM</option>
     </select>
 
-    <!-- BOX INPUT JAWATAN (HANYA MUNCUL JIKA PILIH WARGA KKM) -->
+    <!-- INPUT JAWATAN WARGA KKM -->
     <div id="boxJawatan" style="display: none;">
       <label>Jawatan / Gelaran (Cth: AMO, Jururawat, Doktor, Farmasi):</label>
       <input type="text" id="jawatan" placeholder="Contoh: Penolong Pegawai Perubatan (AMO)">
@@ -158,7 +164,7 @@
 
   <script>
     // PASTE URL GOOGLE APPS SCRIPT ANDA DI SINI
-    const SCRIPT_URL = "https://script.google.com/a/macros/moh.gov.my/s/AKfycbwOfqqDTh7ML9WdbzM-zjGneNNKzkz0zLdOUBmLC2P0d38z4yNWRUqzKJIdiuZ-epo/exec";
+    const SCRIPT_URL = "https://script.google.com/a/macros/moh.gov.my/s/AKfycbyJPgJSf9TijmA8LE1frqBit-RAvwKqKzkelquHx4dCFloS398HeZHw_FHj_3lDRLc/exec";
 
     let holes = document.querySelectorAll('.hole');
     let scoreDisplay = document.getElementById('score');
@@ -227,6 +233,11 @@
       startBtn.style.opacity = '1';
     }
 
+    function tukarDaerah() {
+      let d = document.getElementById("daerah").value;
+      document.getElementById("boxLuarTerengganu").style.display = (d === "Luar Terengganu") ? "block" : "none";
+    }
+
     function tukarKategori() {
       let kat = document.getElementById("kategori").value;
       document.getElementById("boxJawatan").style.display = (kat === "Warga KKM") ? "block" : "none";
@@ -251,7 +262,7 @@
             rankListHTML += `
               <div class="rank-item">
                 <span class="rank-num">#${i + 1}</span>
-                <span><b>${data[i].nama}</b> (${data[i].daerah || 'Terengganu'}) - <i style="font-size:11px; color:#cbd5e0;">${labelJawatan}</i></span>
+                <span><b>${data[i].nama}</b> (${data[i].daerah || 'Luar Terengganu'}) - <i style="font-size:11px; color:#cbd5e0;">${labelJawatan}</i></span>
                 <span style="color: #facc15; font-weight: bold;">${data[i].score} pts</span>
               </div>
             `;
@@ -264,12 +275,22 @@
     function hantarSkor() {
       let nama = document.getElementById("nama").value;
       let noTel = document.getElementById("noTel").value;
-      let daerah = document.getElementById("daerah").value;
+      let daerahSelect = document.getElementById("daerah").value;
+      let daerahLuar = document.getElementById("daerahLuar").value;
       let kategori = document.getElementById("kategori").value;
       let jawatan = document.getElementById("jawatan").value;
       let statusMsg = document.getElementById("statusMsg");
 
-      if (!nama || !noTel || !daerah) {
+      let daerahFinal = daerahSelect;
+      if (daerahSelect === "Luar Terengganu") {
+        if (!daerahLuar) {
+          alert("Sila nyatakan Negeri/Daerah asal anda!");
+          return;
+        }
+        daerahFinal = daerahLuar;
+      }
+
+      if (!nama || !noTel || !daerahSelect) {
         alert("Sila isi Nama, No. WhatsApp, dan Pilih Daerah!");
         return;
       }
@@ -286,7 +307,7 @@
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nama: nama, noTel: noTel, daerah: daerah, kategori: kategori, jawatan: jawatan, score: score })
+        body: JSON.stringify({ nama: nama, noTel: noTel, daerah: daerahFinal, kategori: kategori, jawatan: jawatan, score: score })
       })
       .then(() => {
         statusMsg.style.color = "#4ade80";
