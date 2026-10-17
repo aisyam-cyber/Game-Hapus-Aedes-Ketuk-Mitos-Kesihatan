@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMO Terengganu - Ketuk Mitos & Aedes</title>
+  <title>AMO Terengganu - Ketuk Aedes & Mitos</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-    body { text-align: center; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; }
+    body { text-align: center; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 15px; }
     h1 { font-size: 22px; color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); margin-bottom: 4px; }
     p.sub { font-size: 13px; color: #94a3b8; margin-bottom: 15px; }
 
@@ -20,12 +20,12 @@
     .hole { background: #0f172a; border-radius: 10px; border: 2px solid #1e293b; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; user-select: none; transition: transform 0.1s; }
     .hole:active { transform: scale(0.92); }
 
-    /* BUTANG LEADERBOARD */
-    .btn-view-all { width: 320px; padding: 12px; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: 1px solid #38bdf8; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 15px; }
-    .btn-start { width: 320px; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+    /* BUTANG UTAMA */
+    .btn-start { width: 320px; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4); }
+    .btn-view-all { width: 320px; padding: 12px; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: 1px solid #38bdf8; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 10px; }
 
-    /* BORANG SKOR */
-    .form-container { margin-top: 15px; background: #1e293b; padding: 18px; border-radius: 12px; width: 320px; text-align: left; }
+    /* BORANG SKOR DINAMIK */
+    .form-container { margin-top: 15px; background: #1e293b; padding: 18px; border-radius: 12px; width: 320px; text-align: left; box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
     label { font-size: 12px; color: #cbd5e0; margin-top: 6px; display: block; }
     input, select { width: 100%; padding: 9px; margin: 4px 0 8px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 13px; }
     button.btn-submit { width: 100%; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 5px; }
@@ -37,7 +37,7 @@
     .modal-header h3 { color: #facc15; font-size: 17px; }
     .close-btn { background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; font-weight: bold; }
 
-    /* PODIUM TOP 3 */
+    /* PODIUM TOP 3 TERPERINCI */
     .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin-bottom: 15px; width: 100%; height: 185px; }
     .podium { display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-radius: 10px 10px 0 0; padding: 8px 4px; width: 32%; color: #0f172a; font-weight: bold; font-size: 11px; }
     .podium .score { font-size: 13px; font-weight: 800; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 10px; }
@@ -105,16 +105,22 @@
     </select>
 
     <label>Kategori:</label>
-    <select id="kategori">
+    <select id="kategori" onchange="tukarKategori()">
       <option value="Orang Awam">Orang Awam</option>
-      <option value="Warga KKM / AMO">Warga KKM / AMO</option>
+      <option value="Warga KKM">Warga KKM</option>
     </select>
 
+    <!-- BOX INPUT JAWATAN (HANYA MUNCUL JIKA PILIH WARGA KKM) -->
+    <div id="boxJawatan" style="display: none;">
+      <label>Jawatan / Gelaran (Cth: AMO, Jururawat, Doktor, Farmasi):</label>
+      <input type="text" id="jawatan" placeholder="Contoh: Penolong Pegawai Perubatan (AMO)">
+    </div>
+
     <button class="btn-submit" onclick="hantarSkor()">Hantar Skor 🏆</button>
-    <p id="statusMsg"></p>
+    <p id="statusMsg" style="margin-top: 8px; font-size: 12px; text-align: center; font-weight: bold;"></p>
   </div>
 
-  <!-- POPUP LEADERBOARD DENGAN PODIUM -->
+  <!-- POPUP LEADERBOARD DENGAN PODIUM TOP 3 -->
   <div class="modal-overlay" id="leaderboardModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -151,7 +157,8 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/a/macros/moh.gov.my/s/AKfycbx0yyGDfEbcF7H8ozYd2Yj9W_ypUgC4mNtOY4EyG_GS2WBVic7yB6C1Z7CUcWWXhwKn/exec";
+    // PASTE URL GOOGLE APPS SCRIPT ANDA DI SINI
+    const SCRIPT_URL = "https://script.google.com/a/macros/moh.gov.my/s/AKfycbwOfqqDTh7ML9WdbzM-zjGneNNKzkz0zLdOUBmLC2P0d38z4yNWRUqzKJIdiuZ-epo/exec";
 
     let holes = document.querySelectorAll('.hole');
     let scoreDisplay = document.getElementById('score');
@@ -165,11 +172,10 @@
     let activeHole = null;
     let activeType = null;
 
-    // Senarai Sasaran (Emoji/Simbol)
     const targets = [
-      { icon: '🦟', pts: 10, type: 'aedes' },    // Nyamuk Aedes (+10)
-      { icon: '❌', pts: 10, type: 'mitos' },    // Mitos Kesihatan (+10)
-      { icon: '🚑', pts: -5, type: 'amo' }       // Elak Ketuk Ambulans AMO (-5)
+      { icon: '🦟', pts: 10, type: 'aedes' },
+      { icon: '❌', pts: 10, type: 'mitos' },
+      { icon: '🚑', pts: -5, type: 'amo' }
     ];
 
     function mulaGame() {
@@ -191,7 +197,6 @@
 
     function showTarget() {
       holes.forEach(h => h.innerText = '');
-      
       let randomHole = Math.floor(Math.random() * holes.length);
       let randomTarget = targets[Math.floor(Math.random() * targets.length)];
 
@@ -222,6 +227,11 @@
       startBtn.style.opacity = '1';
     }
 
+    function tukarKategori() {
+      let kat = document.getElementById("kategori").value;
+      document.getElementById("boxJawatan").style.display = (kat === "Warga KKM") ? "block" : "none";
+    }
+
     function openModal() { document.getElementById("leaderboardModal").style.display = "flex"; }
     function closeModal() { document.getElementById("leaderboardModal").style.display = "none"; }
 
@@ -231,16 +241,17 @@
         .then(data => {
           if (!data || data.length === 0) return;
 
-          if (data[0]) { document.getElementById("p1-name").innerText = data[0].nama; document.getElementById("p1-daerah").innerText = data[0].daerah || "-"; document.getElementById("p1-kat").innerText = data[0].kategori || "-"; document.getElementById("p1-score").innerText = data[0].score + " pts"; }
-          if (data[1]) { document.getElementById("p2-name").innerText = data[1].nama; document.getElementById("p2-daerah").innerText = data[1].daerah || "-"; document.getElementById("p2-kat").innerText = data[1].kategori || "-"; document.getElementById("p2-score").innerText = data[1].score + " pts"; }
-          if (data[2]) { document.getElementById("p3-name").innerText = data[2].nama; document.getElementById("p3-daerah").innerText = data[2].daerah || "-"; document.getElementById("p3-kat").innerText = data[2].kategori || "-"; document.getElementById("p3-score").innerText = data[2].score + " pts"; }
+          if (data[0]) { document.getElementById("p1-name").innerText = data[0].nama; document.getElementById("p1-daerah").innerText = data[0].daerah || "-"; document.getElementById("p1-kat").innerText = (data[0].kategori === "Warga KKM") ? data[0].jawatan : "Orang Awam"; document.getElementById("p1-score").innerText = data[0].score + " pts"; }
+          if (data[1]) { document.getElementById("p2-name").innerText = data[1].nama; document.getElementById("p2-daerah").innerText = data[1].daerah || "-"; document.getElementById("p2-kat").innerText = (data[1].kategori === "Warga KKM") ? data[1].jawatan : "Orang Awam"; document.getElementById("p2-score").innerText = data[1].score + " pts"; }
+          if (data[2]) { document.getElementById("p3-name").innerText = data[2].nama; document.getElementById("p3-daerah").innerText = data[2].daerah || "-"; document.getElementById("p3-kat").innerText = (data[2].kategori === "Warga KKM") ? data[2].jawatan : "Orang Awam"; document.getElementById("p3-score").innerText = data[2].score + " pts"; }
 
           let rankListHTML = "";
           for (let i = 3; i < data.length; i++) {
+            let labelJawatan = (data[i].kategori === "Warga KKM") ? data[i].jawatan : "Awam";
             rankListHTML += `
               <div class="rank-item">
                 <span class="rank-num">#${i + 1}</span>
-                <span><b>${data[i].nama}</b> (${data[i].daerah || 'Terengganu'}) - <i style="font-size:11px; color:#cbd5e0;">${data[i].kategori || 'Awam'}</i></span>
+                <span><b>${data[i].nama}</b> (${data[i].daerah || 'Terengganu'}) - <i style="font-size:11px; color:#cbd5e0;">${labelJawatan}</i></span>
                 <span style="color: #facc15; font-weight: bold;">${data[i].score} pts</span>
               </div>
             `;
@@ -255,10 +266,16 @@
       let noTel = document.getElementById("noTel").value;
       let daerah = document.getElementById("daerah").value;
       let kategori = document.getElementById("kategori").value;
+      let jawatan = document.getElementById("jawatan").value;
       let statusMsg = document.getElementById("statusMsg");
 
       if (!nama || !noTel || !daerah) {
         alert("Sila isi Nama, No. WhatsApp, dan Pilih Daerah!");
+        return;
+      }
+
+      if (kategori === "Warga KKM" && !jawatan) {
+        alert("Sila nyatakan jawatan anda!");
         return;
       }
 
@@ -269,7 +286,7 @@
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nama: nama, noTel: noTel, daerah: daerah, kategori: kategori, score: score })
+        body: JSON.stringify({ nama: nama, noTel: noTel, daerah: daerah, kategori: kategori, jawatan: jawatan, score: score })
       })
       .then(() => {
         statusMsg.style.color = "#4ade80";
